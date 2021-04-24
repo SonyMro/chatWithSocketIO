@@ -1,8 +1,12 @@
+import 'package:chat/helpers/mostrar_alerta.dart';
+import 'package:chat/services/auth_services.dart';
+import 'package:chat/services/socket_service.dart';
 import 'package:chat/widgets/boton_azul.dart';
 import 'package:chat/widgets/custom_input.dart';
 import 'package:chat/widgets/labels.dart';
 import 'package:chat/widgets/logo.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatelessWidget {
   @override
@@ -48,6 +52,8 @@ class __FormState extends State<_Form> {
   final passCtrl = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final socketService = Provider.of<SocketService>(context, listen: false);
     return Container(
       child: Column(
         children: <Widget>[
@@ -65,7 +71,23 @@ class __FormState extends State<_Form> {
           ),
           // TextField(),
           // TextField(),
-          BotonAzul(text: 'Ingrese', onPressed: () {}),
+          BotonAzul(
+            text: 'Ingrese',
+            onPressed: () async {
+              FocusScope.of(context).unfocus();
+              final loginOk = await authService.login(
+                  emailCtrl.text.trim(), passCtrl.text.trim());
+              print(loginOk);
+              if (loginOk) {
+                socketService.connect();
+                Navigator.pushReplacementNamed(context, 'usuarios');
+              } else {
+                //Mostrar alerta
+                mostrarAlerta(context, "Login incorrecto",
+                    "Revise sus credenciales nuevamente");
+              }
+            },
+          ),
         ],
       ),
     );
